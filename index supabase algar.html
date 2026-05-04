@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Algar Telecom — Retiradas 2026</title>
+
+<script>
+  const SUPABASE_URL  = 'https://xicwyhckxlwzefuipjqd.supabase.co';
+  const SUPABASE_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhpY3d5aGNreGx3emVmdWlwanFkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc4MzQxODQsImV4cCI6MjA5MzQxMDE4NH0.odFgBl6zlpvzhdZ5IANPuq3TnRgti86hxzhyD9IbTM0';
+  const SENHA_ACESSO  = '1234';
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+  :root {
+    --red: #e8141c; --red-dark: #b50f16; --red-light: #fef0f0;
+    --green: #1a8c3e; --green-light: #eaf6ee;
+    --amber: #b86e00; --amber-light: #fff8ec;
+    --blue: #1560a8; --blue-light: #eaf2fd;
+    --purple: #6d28d9; --purple-light: #f3f0ff;
+    --danger: #dc2626; --danger-light: #fef2f2;
+    --gray-50: #f8f8f8; --gray-100: #f0f0f0; --gray-200: #e0e0e0;
+    --gray-300: #ccc; --gray-400: #aaa; --gray-600: #666; --gray-900: #1a1a1a;
+    --radius: 8px; --radius-lg: 12px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f2f2f2; color: var(--gray-900); font-size: 14px; min-height: 100vh; }
+
+  /* LOGIN */
+  #login-screen { position: fixed; inset: 0; background: #f2f2f2; display: flex; align-items: center; justify-content: center; z-index: 9999; }
+  .login-box { background: white; border-radius: 16px; padding: 40px 36px; box-shadow: 0 8px 40px rgba(0,0,0,0.12); width: 340px; text-align: center; }
+  .login-logo { width: 56px; height: 56px; background: var(--red); border-radius: 12px; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; }
+  .login-title { font-size: 20px; font-weight: 800; color: var(--gray-900); margin-bottom: 4px; }
+  .login-sub { font-size: 13px; color: var(--gray-400); margin-bottom: 28px; }
+  .login-box input[type="password"] { width: 100%; padding: 12px 14px; border: 2px solid var(--gray-200); border-radius: var(--radius); font-size: 16px; outline: none; text-align: center; letter-spacing: 4px; margin-bottom: 12px; transition: border-color 0.2s; }
+  .login-box input[type="password"]:focus { border-color: var(--red); }
+  .login-box input[type="password"].shake { animation: shake 0.4s ease; border-color: var(--red); }
+  @keyframes shake { 0%,100%{transform:translateX(0)} 20%,60%{transform:translateX(-6px)} 40%,80%{transform:translateX(6px)} }
+  .btn-login { width: 100%; padding: 12px; background: var(--red); color: white; border: none; border-radius: var(--radius); font-size: 15px; font-weight: 700; cursor: pointer; transition: background 0.15s; }
+  .btn-login:hover { background: var(--red-dark); }
+  .login-error { color: var(--red); font-size: 12px; margin-top: 8px; min-height: 16px; }
+
+  /* MODAIS */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); display: flex; align-items: center; justify-content: center; z-index: 500; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
+  .modal-overlay.open { opacity: 1; pointer-events: all; }
+  .modal { background: white; border-radius: var(--radius-lg); padding: 24px 28px; width: 520px; max-width: 95vw; max-height: 90vh; overflow-y: auto; box-shadow: 0 12px 40px rgba(0,0,0,0.18); transform: translateY(20px); transition: transform 0.2s; }
+  .modal-overlay.open .modal { transform: translateY(0); }
+  .modal h3 { font-size: 17px; font-weight: 800; margin-bottom: 18px; }
+  .modal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .modal-field { display: flex; flex-direction: column; gap: 5px; }
+  .modal-field.full { grid-column: 1 / -1; }
+  .modal-field label { font-size: 11px; font-weight: 700; color: var(--gray-400); text-transform: uppercase; letter-spacing: 0.5px; }
+  .modal-field input { padding: 8px 10px; border: 1.5px solid var(--gray-200); border-radius: var(--radius); font-size: 13px; outline: none; }
+  .modal-field input:focus { border-color: var(--red); }
+  .modal-actions { display: flex; gap: 10px; margin-top: 20px; justify-content: flex-end; }
+  .btn-cancel { padding: 9px 20px; border: 1.5px solid var(--gray-200); border-radius: var(--radius); background: white; font-size: 13px; font-weight: 600; cursor: pointer; color: var(--gray-600); }
+  .btn-cancel:hover { background: var(--gray-100); }
+  .btn-adicionar-ok { padding: 9px 20px; background: var(--red); color: white; border: none; border-radius: var(--radius); font-size: 13px; font-weight: 700; cursor: pointer; }
+  .btn-adicionar-ok:hover { background: var(--red-dark); }
+
+  /* MODAL CONFIRMAR */
+  .modal-confirm { background: white; border-radius: var(--radius-lg); padding: 28px 28px 24px; width: 400px; max-width: 95vw; text-align: center; box-shadow: 0 12px 40px rgba(0,0,0,0.18); transform: translateY(20px); transition: transform 0.2s; }
+  .modal-overlay.open .modal-confirm { transform: translateY(0); }
+  .modal-confirm-icon { font-size: 42px; margin-bottom: 12px; }
+  .modal-confirm h3 { font-size: 16px; font-weight: 800; margin-bottom: 8px; }
+  .modal-confirm p { font-size: 13px; color: var(--gray-600); margin-bottom: 22px; line-height: 1.5; }
+  .btn-confirm-arq { padding: 10px 24px; background: var(--purple); color: white; border: none; border-radius: var(--radius); font-size: 13px; font-weight: 700; cursor: pointer; }
+  .btn-confirm-arq:hover { background: #5b21b6; }
+  .btn-confirm-del { padding: 10px 24px; background: var(--danger); color: white; border: none; border-radius: var(--radius); font-size: 13px; font-weight: 700; cursor: pointer; }
+  .btn-confirm-del:hover { background: #b91c1c; }
+
+  /* TOAST */
+  #toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px); background: #1a1a1a; color: white; padding: 10px 22px; border-radius: 24px; font-size: 13px; font-weight: 600; z-index: 9999; transition: transform 0.3s ease, opacity 0.3s ease; opacity: 0; }
+  #toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+  #toast.erro { background: #c0392b; }
+
+  /* HEADER */
+  .header { background: var(--red); color: white; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,0.18); }
+  .header-inner { max-width: 1200px; margin: 0 auto; padding: 10px 20px; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  .logo { display: flex; align-items: center; gap: 12px; }
+  .logo-mark { width: 38px; height: 38px; background: white; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+  .logo-text { font-size: 18px; font-weight: 700; }
+  .logo-sub { font-size: 11px; opacity: 0.8; margin-top: 1px; }
+  .header-tabs { display: flex; gap: 4px; }
+  .tab { padding: 7px 16px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; background: rgba(255,255,255,0.15); color: white; transition: background 0.15s; }
+  .tab:hover { background: rgba(255,255,255,0.25); }
+  .tab.active { background: white; color: var(--red); }
+
+  /* STATS */
+  .stats-bar { background: white; border-bottom: 1px solid var(--gray-200); }
+  .stats-inner { max-width: 1200px; margin: 0 auto; padding: 10px 20px; display: flex; gap: 12px; flex-wrap: wrap; }
+  .stat { display: flex; align-items: center; gap: 8px; padding: 6px 14px; border-radius: 20px; font-size: 13px; }
+  .stat-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .stat-n { font-weight: 700; font-size: 15px; }
+  .stat.s-total { background: var(--gray-100); } .stat.s-total .stat-dot { background: var(--gray-400); }
+  .stat.s-pend { background: var(--amber-light); color: var(--amber); } .stat.s-pend .stat-dot { background: var(--amber); }
+  .stat.s-env { background: var(--blue-light); color: var(--blue); } .stat.s-env .stat-dot { background: var(--blue); }
+  .stat.s-ag { background: var(--green-light); color: var(--green); } .stat.s-ag .stat-dot { background: var(--green); }
+  .stat.s-arq { background: var(--purple-light); color: var(--purple); } .stat.s-arq .stat-dot { background: var(--purple); }
+
+  /* MAIN */
+  .main { max-width: 1200px; margin: 0 auto; padding: 16px 20px 40px; }
+
+  /* TOOLBAR */
+  .toolbar { background: white; border: 1px solid var(--gray-200); border-radius: var(--radius-lg); padding: 12px 16px; margin-bottom: 14px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  .toolbar input[type="text"] { flex: 1; min-width: 200px; padding: 8px 12px; border: 1px solid var(--gray-200); border-radius: var(--radius); font-size: 13px; outline: none; background: var(--gray-50); }
+  .toolbar input[type="text"]:focus { border-color: var(--red); background: white; }
+  .toolbar select { padding: 8px 10px; border: 1px solid var(--gray-200); border-radius: var(--radius); font-size: 13px; background: var(--gray-50); outline: none; cursor: pointer; }
+  .btn-add { background: white; color: var(--green); border: 2px solid var(--green); padding: 7px 16px; border-radius: var(--radius); font-size: 13px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+  .btn-add:hover { background: var(--green-light); }
+
+  /* LOADING */
+  .loading { display: flex; align-items: center; justify-content: center; padding: 60px 20px; gap: 12px; color: var(--gray-400); }
+  .spinner { width: 22px; height: 22px; border: 3px solid var(--gray-200); border-top-color: var(--red); border-radius: 50%; animation: spin 0.7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* CARDS */
+  .cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 12px; }
+  .card { background: white; border: 1.5px solid var(--gray-200); border-radius: var(--radius-lg); padding: 14px 16px; transition: box-shadow 0.15s; }
+  .card:hover { box-shadow: 0 2px 12px rgba(0,0,0,0.09); }
+  .card.status-enviado { border-color: #b8d4f7; background: #f6faff; }
+  .card.status-agendado { border-color: #8fcfaa; background: #f4fbf6; }
+  .card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 8px; }
+  .card-name { font-weight: 700; font-size: 14px; line-height: 1.3; flex: 1; }
+  .card-meta { display: flex; gap: 12px; margin-bottom: 10px; flex-wrap: wrap; }
+  .card-meta-item { font-size: 11px; color: var(--gray-400); font-family: monospace; }
+  .card-meta-item strong { color: var(--gray-600); }
+  .badge { font-size: 10px; font-weight: 700; padding: 3px 9px; border-radius: 20px; white-space: nowrap; letter-spacing: 0.3px; flex-shrink: 0; }
+  .badge-pend { background: var(--amber-light); color: var(--amber); }
+  .badge-env { background: var(--blue-light); color: var(--blue); }
+  .badge-ag { background: var(--green-light); color: var(--green); }
+  .phone-box { background: var(--gray-50); border: 1px solid var(--gray-200); border-radius: var(--radius); padding: 10px 14px; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .phone-num { font-size: 20px; font-weight: 700; font-family: 'Courier New', monospace; color: var(--gray-900); letter-spacing: 1px; }
+  .btn-copy { background: var(--gray-100); border: 1px solid var(--gray-200); color: var(--gray-600); padding: 5px 10px; border-radius: var(--radius); font-size: 11px; cursor: pointer; font-weight: 600; }
+  .btn-copy:hover { background: var(--gray-200); }
+  .btn-copy.copied { background: var(--green-light); color: var(--green); border-color: var(--green); }
+  .card-addr { font-size: 12px; color: var(--gray-600); margin-bottom: 10px; line-height: 1.5; }
+  .card-addr strong { color: var(--gray-900); }
+  .card-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+  .field { display: flex; flex-direction: column; gap: 3px; }
+  .field label { font-size: 10px; font-weight: 600; color: var(--gray-400); text-transform: uppercase; letter-spacing: 0.5px; }
+  .field input[type="date"], .field input[type="time"] { padding: 5px 8px; border: 1px solid var(--gray-200); border-radius: var(--radius); font-size: 13px; background: white; outline: none; width: 100%; }
+  .field input:focus { border-color: var(--red); }
+  .field-obs { grid-column: 1 / -1; }
+  .field textarea { padding: 5px 8px; border: 1px solid var(--gray-200); border-radius: var(--radius); font-size: 12px; resize: vertical; min-height: 48px; font-family: inherit; background: white; outline: none; width: 100%; }
+  .field textarea:focus { border-color: var(--red); }
+  .card-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+  .btn-contato { flex: 1; min-width: 120px; padding: 8px; border-radius: var(--radius); font-size: 12px; font-weight: 700; cursor: pointer; border: none; text-align: center; }
+  .btn-contato.pending { background: var(--red); color: white; }
+  .btn-contato.pending:hover { background: var(--red-dark); }
+  .btn-contato.done { background: var(--blue-light); color: var(--blue); border: 1.5px solid #b8d4f7; }
+  .btn-agendar { flex: 1; min-width: 100px; padding: 8px; border-radius: var(--radius); font-size: 12px; font-weight: 700; cursor: pointer; border: 1.5px solid var(--green); color: var(--green); background: white; }
+  .btn-agendar:hover { background: var(--green-light); }
+  .btn-agendar.done { background: var(--green); color: white; }
+  .btn-arquivar { padding: 8px 12px; border-radius: var(--radius); font-size: 12px; font-weight: 700; cursor: pointer; border: 1.5px solid var(--purple); color: var(--purple); background: white; white-space: nowrap; }
+  .btn-arquivar:hover { background: var(--purple-light); }
+  .btn-excluir { padding: 8px 10px; border-radius: var(--radius); font-size: 12px; font-weight: 700; cursor: pointer; border: 1.5px solid var(--danger); color: var(--danger); background: white; white-space: nowrap; }
+  .btn-excluir:hover { background: var(--danger-light); }
+  .btn-reset { padding: 8px 10px; border-radius: var(--radius); font-size: 12px; cursor: pointer; border: 1px solid var(--gray-200); color: var(--gray-600); background: white; }
+  .btn-reset:hover { background: var(--gray-100); }
+
+  /* VIEW TÉCNICO */
+  .tec-header { background: var(--red); color: white; border-radius: var(--radius-lg) var(--radius-lg) 0 0; padding: 14px 20px; display: flex; align-items: center; justify-content: space-between; }
+  .tec-header h2 { font-size: 16px; font-weight: 700; }
+  .tec-header span { font-size: 12px; opacity: 0.8; }
+  .tec-table-wrap { background: white; border: 1px solid var(--gray-200); border-top: none; border-radius: 0 0 var(--radius-lg) var(--radius-lg); overflow: hidden; margin-bottom: 16px; }
+  .tec-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .tec-table th { background: var(--gray-50); padding: 9px 14px; text-align: left; font-size: 11px; font-weight: 700; color: var(--gray-600); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--gray-200); }
+  .tec-table td { padding: 10px 14px; border-bottom: 1px solid var(--gray-100); vertical-align: top; }
+  .tec-table tr:last-child td { border-bottom: none; }
+  .tec-table tr:hover td { background: var(--gray-50); }
+  .tec-name { font-weight: 600; }
+  .tec-addr { font-size: 12px; color: var(--gray-600); margin-top: 2px; }
+  .tec-date { font-weight: 700; color: var(--red); font-size: 14px; }
+  .tec-time { font-size: 12px; color: var(--gray-600); }
+  .tec-obs { font-size: 12px; color: var(--gray-600); font-style: italic; }
+  .no-ag { text-align: center; padding: 40px; color: var(--gray-400); font-size: 14px; }
+  .btn-print { background: white; border: 1.5px solid var(--red); color: var(--red); padding: 8px 18px; border-radius: var(--radius); font-size: 13px; font-weight: 700; cursor: pointer; }
+  .btn-print:hover { background: var(--red-light); }
+  .tec-info { background: var(--amber-light); border: 1px solid #f5d89c; border-radius: var(--radius); padding: 10px 14px; font-size: 12px; color: var(--amber); margin-bottom: 12px; }
+
+  /* VIEW ARQUIVADOS */
+  .arq-header { background: var(--purple); color: white; border-radius: var(--radius-lg) var(--radius-lg) 0 0; padding: 14px 20px; display: flex; align-items: center; justify-content: space-between; }
+  .arq-header h2 { font-size: 16px; font-weight: 700; }
+  .arq-header span { font-size: 12px; opacity: 0.8; }
+  .arq-info { background: var(--purple-light); border: 1px solid #c4b5fd; border-radius: var(--radius); padding: 10px 14px; font-size: 12px; color: var(--purple); margin-bottom: 12px; }
+  .arq-toolbar { background: white; border: 1px solid var(--gray-200); border-radius: var(--radius-lg); padding: 10px 14px; margin-bottom: 12px; display: flex; gap: 10px; }
+  .arq-toolbar input { flex: 1; padding: 8px 12px; border: 1px solid var(--gray-200); border-radius: var(--radius); font-size: 13px; outline: none; background: var(--gray-50); }
+  .arq-toolbar input:focus { border-color: var(--purple); background: white; }
+  .arq-table-wrap { background: white; border: 1px solid var(--gray-200); border-top: none; border-radius: 0 0 var(--radius-lg) var(--radius-lg); overflow: hidden; }
+  .arq-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .arq-table th { background: var(--gray-50); padding: 9px 14px; text-align: left; font-size: 11px; font-weight: 700; color: var(--gray-600); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--gray-200); }
+  .arq-table td { padding: 10px 14px; border-bottom: 1px solid var(--gray-100); vertical-align: middle; }
+  .arq-table tr:last-child td { border-bottom: none; }
+  .arq-table tr:hover td { background: var(--gray-50); }
+  .arq-name { font-weight: 600; }
+  .arq-sub { font-size: 12px; color: var(--gray-600); margin-top: 2px; }
+  .arq-date { font-size: 12px; color: var(--gray-600); }
+  .arq-actions { display: flex; gap: 6px; }
+  .btn-desarquivar { padding: 5px 12px; border-radius: var(--radius); font-size: 11px; font-weight: 700; cursor: pointer; border: 1.5px solid var(--gray-300); color: var(--gray-600); background: white; }
+  .btn-desarquivar:hover { background: var(--gray-100); }
+  .btn-del-arq { padding: 5px 10px; border-radius: var(--radius); font-size: 11px; font-weight: 700; cursor: pointer; border: 1.5px solid var(--danger); color: var(--danger); background: white; }
+  .btn-del-arq:hover { background: var(--danger-light); }
+
+  .empty { text-align: center; padding: 60px 20px; color: var(--gray-400); }
+  .empty-icon { font-size: 40px; margin-bottom: 10px; }
+
+  @media print {
+    .header, .stats-bar, .toolbar, #view-operador, #view-arquivados, .tec-info, .btn-print { display: none !important; }
+    #view-tecnico { display: block !important; }
+    body { background: white; }
+    .main { padding: 0; max-width: 100%; }
+  }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">
+      <svg viewBox="0 0 36 36" fill="none"><rect width="36" height="36" rx="7" fill="#e8141c"/><text x="18" y="26" text-anchor="middle" font-family="'Segoe UI',sans-serif" font-weight="900" font-size="20" fill="white">A</text></svg>
+    </div>
+    <div class="login-title">Algar Telecom</div>
+    <div class="login-sub">Retiradas de Modem — Desativação 2026</div>
+    <input type="password" id="senha-input" placeholder="Digite a senha">
+    <button class="btn-login" onclick="tentarLogin()">🔐 Entrar</button>
+    <div class="login-error" id="login-error"></div>
+  </div>
+</div>
+
+<!-- MODAL ADICIONAR CLIENTE -->
+<div class="modal-overlay" id="modal-add">
+  <div class="modal">
+    <h3>➕ Adicionar Novo Cliente</h3>
+    <div class="modal-grid">
+      <div class="modal-field full"><label>Nome Completo *</label><input type="text" id="f-name" placeholder="Ex: JOAO DA SILVA"></div>
+      <div class="modal-field"><label>Protocolo</label><input type="text" id="f-proto" placeholder="Ex: 0029999999"></div>
+      <div class="modal-field"><label>Circuito</label><input type="text" id="f-circuito" placeholder="Ex: 010186744"></div>
+      <div class="modal-field"><label>Telefone *</label><input type="text" id="f-phone" placeholder="(013) 99999-9999"></div>
+      <div class="modal-field"><label>Segmento</label><input type="text" id="f-segmento" placeholder="Ex: RESIDENCIAL"></div>
+      <div class="modal-field full"><label>Endereço</label><input type="text" id="f-addr" placeholder="Ex: R DAS FLORES, 123"></div>
+      <div class="modal-field"><label>Bairro</label><input type="text" id="f-bairro" placeholder="Ex: CENTRO"></div>
+      <div class="modal-field"><label>Cidade</label><input type="text" id="f-local" placeholder="Ex: SANTOS"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="fecharModal('modal-add')">Cancelar</button>
+      <button class="btn-adicionar-ok" onclick="confirmarNovoCliente()">✅ Adicionar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CONFIRMAR ARQUIVAR -->
+<div class="modal-overlay" id="modal-arq">
+  <div class="modal-confirm">
+    <div class="modal-confirm-icon">📦</div>
+    <h3>Arquivar cliente?</h3>
+    <p id="modal-arq-nome" style="font-weight:700;margin-bottom:8px"></p>
+    <p style="font-size:12px;color:var(--gray-400)">O cliente sairá da lista principal e irá para a aba <strong>Arquivados</strong>. Você pode restaurar a qualquer momento.</p>
+    <div class="modal-actions" style="justify-content:center;margin-top:20px">
+      <button class="btn-cancel" onclick="fecharModal('modal-arq')">Cancelar</button>
+      <button class="btn-confirm-arq" onclick="confirmarArquivar()">📦 Arquivar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CONFIRMAR EXCLUIR -->
+<div class="modal-overlay" id="modal-del">
+  <div class="modal-confirm">
+    <div class="modal-confirm-icon">🗑️</div>
+    <h3>Excluir permanentemente?</h3>
+    <p id="modal-del-nome" style="font-weight:700;margin-bottom:8px"></p>
+    <p style="font-size:12px;color:var(--gray-400)">Esta ação é <strong>irreversível</strong>. O cliente será removido completamente do sistema e do banco de dados.</p>
+    <div class="modal-actions" style="justify-content:center;margin-top:20px">
+      <button class="btn-cancel" onclick="fecharModal('modal-del')">Cancelar</button>
+      <button class="btn-confirm-del" onclick="confirmarExcluir()">🗑️ Excluir para sempre</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<!-- HEADER -->
+<div class="header" id="app-header" style="display:none">
+  <div class="header-inner">
+    <div class="logo">
+      <div class="logo-mark">
+        <svg viewBox="0 0 26 26" fill="none"><rect width="26" height="26" rx="5" fill="#e8141c"/><text x="13" y="19" text-anchor="middle" font-family="'Segoe UI',sans-serif" font-weight="900" font-size="14" fill="white">A</text></svg>
+      </div>
+      <div>
+        <div class="logo-text">Algar Telecom</div>
+        <div class="logo-sub">Retiradas de Modem — Desativação 2026</div>
+      </div>
+    </div>
+    <div class="header-tabs">
+      <button class="tab active" onclick="setView('operador')">📞 Operador</button>
+      <button class="tab" onclick="setView('tecnico')">🔧 Técnicos</button>
+      <button class="tab" onclick="setView('arquivados')">📦 Arquivados</button>
+    </div>
+  </div>
+</div>
+
+<!-- STATS -->
+<div class="stats-bar" id="app-stats" style="display:none">
+  <div class="stats-inner" id="stats"></div>
+</div>
+
+<!-- MAIN -->
+<div class="main" id="app-main" style="display:none">
+
+  <!-- TOOLBAR OPERADOR -->
+  <div class="toolbar" id="toolbar-op">
+    <input type="text" id="search" placeholder="🔍  Buscar por nome, telefone, protocolo ou circuito..." oninput="render()">
+    <select id="filterStatus" onchange="render()">
+      <option value="">Todos os status</option>
+      <option value="pendente">Pendente</option>
+      <option value="enviado">Contato feito</option>
+      <option value="agendado">Agendado</option>
+    </select>
+    <select id="filterLocal" onchange="render()">
+      <option value="">Todas as cidades</option>
+    </select>
+    <button class="btn-add" onclick="abrirModal('modal-add')">➕ Novo cliente</button>
+  </div>
+
+  <!-- VIEW OPERADOR -->
+  <div id="view-operador">
+    <div id="loading-cards" class="loading"><div class="spinner"></div> Carregando dados do servidor...</div>
+    <div class="cards-grid" id="cards" style="display:none"></div>
+    <div id="empty-msg" class="empty" style="display:none"><div class="empty-icon">🔍</div><div>Nenhum cliente encontrado.</div></div>
+  </div>
+
+  <!-- VIEW TÉCNICO -->
+  <div id="view-tecnico" style="display:none">
+    <div class="tec-info">⚠️ Mostra apenas clientes com retirada agendada. Imprima para os técnicos.</div>
+    <div style="display:flex;justify-content:flex-end;margin-bottom:10px;">
+      <button class="btn-print" onclick="window.print()">🖨️ Imprimir lista</button>
+    </div>
+    <div class="tec-header"><h2>Lista de Retiradas Agendadas</h2><span id="tec-count">0 clientes</span></div>
+    <div class="tec-table-wrap">
+      <table class="tec-table">
+        <thead><tr><th>#</th><th>Cliente</th><th>Endereço</th><th>Telefone</th><th>Circuito</th><th>Data</th><th>Horário</th><th>Observação</th></tr></thead>
+        <tbody id="tec-tbody"></tbody>
+      </table>
+      <div id="tec-empty" class="no-ag" style="display:none">Nenhum cliente agendado ainda.</div>
+    </div>
+  </div>
+
+  <!-- VIEW ARQUIVADOS -->
+  <div id="view-arquivados" style="display:none">
+    <div class="arq-info">📦 Clientes que já tiveram o modem retirado. Clique em <strong>Restaurar</strong> para devolver à lista principal.</div>
+    <div class="arq-toolbar">
+      <input type="text" id="search-arq" placeholder="🔍  Buscar arquivados por nome, telefone, circuito..." oninput="renderArquivados()">
+    </div>
+    <div class="arq-header"><h2>Clientes Arquivados</h2><span id="arq-count">0 clientes</span></div>
+    <div class="arq-table-wrap">
+      <table class="arq-table">
+        <thead><tr><th>#</th><th>Cliente</th><th>Telefone</th><th>Circuito</th><th>Endereço</th><th>Data retirada</th><th>Observação</th><th></th></tr></thead>
+        <tbody id="arq-tbody"></tbody>
+      </table>
+      <div id="arq-empty" class="no-ag" style="display:none">Nenhum cliente arquivado ainda.</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const { createClient } = supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// ══════════════════════════════════════════════════════════════
+// BASE DE CLIENTES — com circuito, segmento e dt_abertura
+// ══════════════════════════════════════════════════════════════
+const CLIENTES_BASE = [
+  {id:'0', proto:"0028606465", circuito:"010186744", segmento:"EMPRESARIAL", name:"EDSON VIEIRA DA SILVA",                         addr:"R DOS DOIS I, 42",                          bairro:"SITIO PAECARA (VICENTE DE CARVA", local:"GUARUJA",      phone:"(013) 98230-3134"},
+  {id:'1', proto:"0028608107", circuito:"010094522", segmento:"RESIDENCIAL", name:"IARA APARECIDA CUSTODIO DA SILVA",               addr:"R QUATRO B, 35",                            bairro:"SITIO PAECARA (VICENTE DE CARVA", local:"GUARUJA",      phone:"(013) 99123-6580"},
+  {id:'2', proto:"0029137841", circuito:"010128821", segmento:"RESIDENCIAL", name:"ALINE PEREIRA DA SILVA",                        addr:"R S JORGE, 467",                            bairro:"SITIO PAECARA (VICENTE DE CARVA", local:"GUARUJA",      phone:"(013) 99890-1929"},
+  {id:'3', proto:"0029331477", circuito:"010151166", segmento:"RESIDENCIAL", name:"DOUGLAS DOS SANTOS SILVA",                      addr:"R VISC DE INHAUMA, 35",                     bairro:"PRQ ESTUARIO (VICENTE DE CARVA",  local:"GUARUJA",      phone:"(013) 99769-1879"},
+  {id:'4', proto:"0028605466", circuito:"010103623", segmento:"RESIDENCIAL", name:"GEFFERSON CICERO CORDEIRO DE LIMA",              addr:"R S VICENTE, 150",                          bairro:"BOQUEIRAO",                       local:"PRAIA GRANDE",  phone:"(013) 98220-0880"},
+  {id:'5', proto:"0029138620", circuito:"010112991", segmento:"EMPRESARIAL", name:"CINTIA SANTOS TOZZI",                           addr:"R JURI, 29",                                bairro:"TUPI",                            local:"PRAIA GRANDE",  phone:"(013) 99954-5901"},
+  {id:'6', proto:"0029334078", circuito:"010176088", segmento:"EMPRESARIAL", name:"RENATO WENDELL MARIANO GONCALVES",              addr:"R POTIGUARES, 419",                         bairro:"TUPI",                            local:"PRAIA GRANDE",  phone:"(014) 99973-1065"},
+  {id:'7', proto:"0027108386", circuito:"09954419",  segmento:"RESIDENCIAL", name:"WANESSA APARECIDA ROVATI",                      addr:"R OCTAVIO CORREA, 188",                     bairro:"ESTUARIO",                        local:"SANTOS",        phone:"(013) 9999-6719"},
+  {id:'8', proto:"0027276989", circuito:"010128200", segmento:"RESIDENCIAL", name:"TIAGO CORREA PEREIRA",                          addr:"R DR COCHRANE, 216",                        bairro:"PAQUETA",                         local:"SANTOS",        phone:"(013) 99799-6259"},
+  {id:'9', proto:"0027277176", circuito:"010102206", segmento:"EMPRESARIAL", name:"WILLIAN DE OLIVEIRA NUNES DE SOUZA",            addr:"AV CAMPOS SALES, 31",                       bairro:"VILA MATHIAS",                    local:"SANTOS",        phone:"(013) 99818-3429"},
+  {id:'10',proto:"0027277706", circuito:"09868462",  segmento:"RESIDENCIAL", name:"ANA KARINA CORRALO DE CARVALHO BASTOS",         addr:"R GONCALVES LEDO, 64",                      bairro:"CAMPO GRANDE",                    local:"SANTOS",        phone:"(013) 97409-3478"},
+  {id:'11',proto:"0027379872", circuito:"09821623",  segmento:"RESIDENCIAL", name:"JEFFERSON SANTANA SANTOS",                      addr:"R JURUBATUBA, 8",                           bairro:"APARECIDA",                       local:"SANTOS",        phone:"(013) 98842-3165"},
+  {id:'12',proto:"0027627071", circuito:"010113984", segmento:"EMPRESARIAL", name:"EMILLY VITORIA SANTOS DO NASCIMENTO",           addr:"R CERQUINHO, 11",                           bairro:"VILA NOVA",                       local:"SANTOS",        phone:"(013) 97804-5029"},
+  {id:'13',proto:"0027629281", circuito:"010062863", segmento:"RESIDENCIAL", name:"ADRIANO RODRIGO CROZETTA",                      addr:"R HENRIQUE ABLAS, 31",                      bairro:"VILA MATHIAS",                    local:"SANTOS",        phone:"(013) 99621-5347"},
+  {id:'14',proto:"0027629548", circuito:"09770022",  segmento:"RESIDENCIAL", name:"EMERSON TRAJANO BATISTA",                       addr:"R JOSE DO PATROCINIO, 155",                 bairro:"MACUCO",                          local:"SANTOS",        phone:"(013) 99716-3694"},
+  {id:'15',proto:"0027723832", circuito:"09824121",  segmento:"RESIDENCIAL", name:"GIOVANA PAVANI DIONISIO DA SILVA",              addr:"R IMPZ LEOPOLDINA, 14",                     bairro:"PONTA DA PRAIA",                  local:"SANTOS",        phone:"(013) 97824-8601"},
+  {id:'16',proto:"0027912927", circuito:"09837098",  segmento:"RESIDENCIAL", name:"PAULO RECHE DE SOUZA",                          addr:"R OSWALDO CRUZ, 350",                       bairro:"BOQUEIRAO",                       local:"SANTOS",        phone:"(013) 98269-5716"},
+  {id:'17',proto:"0028028238", circuito:"09991919",  segmento:"RESIDENCIAL", name:"ADELAIDE MARIA DE OLIVEIRA MACHADO",            addr:"R MIN JOAO MENDES, 62",                     bairro:"EMBARE",                          local:"SANTOS",        phone:"(139) 9709-5555"},
+  {id:'18',proto:"0028048057", circuito:"09917357",  segmento:"RESIDENCIAL", name:"BERNARDO DIAS TELES",                           addr:"R OSWALDO CRUZ, 350",                       bairro:"BOQUEIRAO",                       local:"SANTOS",        phone:"(011) 99682-8006"},
+  {id:'19',proto:"0028258392", circuito:"010172146", segmento:"RESIDENCIAL", name:"NISIA CAETANO",                                 addr:"R BRAZ CUBAS, 409",                         bairro:"VILA NOVA",                       local:"SANTOS",        phone:"(013) 98230-3466"},
+  {id:'20',proto:"0028298218", circuito:"010089606", segmento:"RESIDENCIAL", name:"IRINY RODRIGUES DA COSTA DUARTE",               addr:"AV WASHINGTON LUIS, 63",                    bairro:"VILA MATHIAS",                    local:"SANTOS",        phone:"(139) 7407-2051"},
+  {id:'21',proto:"0028301293", circuito:"09702191",  segmento:"RESIDENCIAL", name:"DENNIS KENJI TAMASHIRO",                        addr:"R ANDRE VIDAL DE NEGREIROS, 81",            bairro:"PONTA DA PRAIA",                  local:"SANTOS",        phone:"(013) 9872-0088"},
+  {id:'22',proto:"0028423128", circuito:"09948428",  segmento:"RESIDENCIAL", name:"VANESSA RICARDI FAGUNDES",                      addr:"R VER HENRIQUE SOLER, 287",                 bairro:"PONTA DA PRAIA",                  local:"SANTOS",        phone:"(013) 9680-5489"},
+  {id:'23',proto:"0028519744", circuito:"09562865",  segmento:"RESIDENCIAL", name:"JOSE RICARDO AUGUSTO SOUTO",                   addr:"R MOEMA, 81",                               bairro:"ESTUARIO",                        local:"SANTOS",        phone:"(013) 97422-4444"},
+  {id:'24',proto:"0028606207", circuito:"09366588",  segmento:"RESIDENCIAL", name:"FATIMA DONATA ROMER",                           addr:"AV DR PEDRO LESSA, 1553",                   bairro:"APARECIDA",                       local:"SANTOS",        phone:"(013) 99703-7878"},
+  {id:'25',proto:"0028606813", circuito:"09811560",  segmento:"RESIDENCIAL", name:"INGRIDH RAMALHO DUARTE BARRETO",                addr:"R MARIZ E BARROS, 37",                      bairro:"VILA BELMIRO",                    local:"SANTOS",        phone:"(013) 98231-1804"},
+  {id:'26',proto:"0028606866", circuito:"09318538",  segmento:"EMPRESARIAL", name:"ROSEMEIRE FERREIRA DOS SANTOS",                 addr:"R VERGUEIRO STEIDEL, 351",                  bairro:"APARECIDA",                       local:"SANTOS",        phone:"(013) 98172-1521"},
+  {id:'27',proto:"0029017662", circuito:"09462146",  segmento:"RESIDENCIAL", name:"WILTON BLUM",                                   addr:"R PE GASTAO DE MORAES, 200",                bairro:"ESTUARIO",                        local:"SANTOS",        phone:"(013) 99200-5009"},
+  {id:'28',proto:"0029062127", circuito:"010011308", segmento:"RESIDENCIAL", name:"ANDREA LEITE ASTORINO",                         addr:"R GUAIBE, 73",                              bairro:"APARECIDA",                       local:"SANTOS",        phone:"(013) 9923-3635"},
+  {id:'29',proto:"0029136258", circuito:"09507490",  segmento:"RESIDENCIAL", name:"MARCIA REGINE SARMENTO VILARDO DA COSTA",       addr:"AV R ALBERTO I, 224",                       bairro:"PONTA DA PRAIA",                  local:"SANTOS",        phone:"(013) 99781-8306"},
+  {id:'30',proto:"0029136807", circuito:"010202677", segmento:"RESIDENCIAL", name:"RAPHAEL DE ALMEIDA GUIMARAES",                  addr:"R CERQUINHO, 11",                           bairro:"VILA NOVA",                       local:"SANTOS",        phone:"(013) 99183-6945"},
+  {id:'31',proto:"0029138600", circuito:"09950166",  segmento:"RESIDENCIAL", name:"MARIA VITORIA BANDEIRA",                        addr:"AV RANGEL PESTANA, 32",                     bairro:"VILA MATHIAS",                    local:"SANTOS",        phone:"(013) 9920-0758"},
+  {id:'32',proto:"0029181142", circuito:"010029716", segmento:"EMPRESARIAL", name:"SB7 SERVICOS EM GERAL LTDA",                    addr:"AV AFFONSO PENNA, 314",                     bairro:"BOQUEIRAO",                       local:"SANTOS",        phone:"(013) 3877-4467"},
+  {id:'33',proto:"0029181471", circuito:"010234116", segmento:"RESIDENCIAL", name:"LAURIANE LLAMAS FERRAZ",                        addr:"R DR LOBO VIANA, 62",                       bairro:"BOQUEIRAO",                       local:"SANTOS",        phone:"(159) 9124-7122"},
+  {id:'34',proto:"0029312227", circuito:"09358611",  segmento:"RESIDENCIAL", name:"VINICIUS MACHADO FRERE",                        addr:"R 1 DE MAIO, 124",                          bairro:"APARECIDA",                       local:"SANTOS",        phone:"(013) 99628-7401"},
+  {id:'35',proto:"0029332555", circuito:"09337001",  segmento:"RESIDENCIAL", name:"REJANE CAVALCANTE DE LIMA",                     addr:"R VENANCIO JOSE LISBOA, 42",                bairro:"PONTA DA PRAIA",                  local:"SANTOS",        phone:"(013) 9913-4359"},
+  {id:'36',proto:"0029332994", circuito:"09936835",  segmento:"RESIDENCIAL", name:"RAQUEL LINS DOS SANTOS",                        addr:"R LUIZ MARQUES GASPAR, 13",                 bairro:"APARECIDA",                       local:"SANTOS",        phone:"(013) 99738-1007"},
+  {id:'37',proto:"0029333649", circuito:"09818007",  segmento:"RESIDENCIAL", name:"JOSE KEVEN MELO RODRIGUES",                     addr:"R PROF TORRES HOMEM, 223",                  bairro:"BOQUEIRAO",                       local:"SANTOS",        phone:"(044) 98815-3283"},
+  {id:'38',proto:"0029334086", circuito:"010176826", segmento:"RESIDENCIAL", name:"DEBORAH LIMA DE OLIVEIRA",                      addr:"R CERQUINHO, 22",                           bairro:"VILA NOVA",                       local:"SANTOS",        phone:"(013) 99130-1227"},
+  {id:'39',proto:"0029355190", circuito:"09570686",  segmento:"RESIDENCIAL", name:"CIBELLI MOREIRA ALVES",                         addr:"R DR MANOEL TOURINHO, 351",                 bairro:"MACUCO",                          local:"SANTOS",        phone:"(011) 9544-5892"},
+  {id:'40',proto:"0028605309", circuito:"010178582", segmento:"RESIDENCIAL", name:"EDILAINE APARECIDA DOS SANTOS ATHANASIO",       addr:"R DA LIBANIA DE LIMA CROOCK, 838",           bairro:"VILA MARGARIDA",                  local:"SAO VICENTE",   phone:"(013) 9921-3521"},
+  {id:'41',proto:"0028606469", circuito:"010140828", segmento:"EMPRESARIAL", name:"AGENOR RODRIGO DE JESUS",                       addr:"AV DR ALCIDES DE ARAUJO, 1138",             bairro:"VILA CASCATINHA",                 local:"SAO VICENTE",   phone:"(013) 99793-8141"},
+  {id:'42',proto:"0029136449", circuito:"010160143", segmento:"RESIDENCIAL", name:"ODIRLEY NUNES QUEIROZ",                         addr:"R SIRIA, 254",                              bairro:"PARQUE BITARU",                   local:"SAO VICENTE",   phone:"(013) 97422-2763"},
+  {id:'43',proto:"0029136913", circuito:"010193100", segmento:"EMPRESARIAL", name:"ELISEU OLIMPIO MARQUES",                        addr:"R FRANCISCO ALVES, 169",                    bairro:"ESPLANADA DOS BARREIROS",         local:"SAO VICENTE",   phone:"(013) 99982-3266"},
+  {id:'44',proto:"0029137130", circuito:"010189300", segmento:"EMPRESARIAL", name:"ALEX SANDRO TELES RIVITTI",                     addr:"R ALVES DO BUGRE, 286",                     bairro:"PARQUE SAO VICENTE",              local:"SAO VICENTE",   phone:"(013) 98171-0306"},
+  {id:'45',proto:"0029331125", circuito:"010217189", segmento:"EMPRESARIAL", name:"ALESSANDRA LIMA DA SILVA",                      addr:"R GRACILIANO RAMOS, 209",                   bairro:"VILA JOCKEI CLUBE",               local:"SAO VICENTE",   phone:"(013) 98843-6090"},
+  {id:'46',proto:"0029333775", circuito:"010129782", segmento:"RESIDENCIAL", name:"LEANDRO DOS SANTOS RAFAEL",                     addr:"R CARIJOS, 491",                            bairro:"PARQUE SAO VICENTE",              local:"SAO VICENTE",   phone:"(013) 99175-0731"},
+  {id:'47',proto:"0029333882", circuito:"010171080", segmento:"EMPRESARIAL", name:"TAISSA SOMENZARI MELO",                         addr:"R DR CARLOS ZINDEL, 121",                   bairro:"PARQUE BITARU",                   local:"SAO VICENTE",   phone:"(013) 99755-4966"},
+];
+
+// ══════════════════════════════════════════════════════════════
+// ESTADO
+// ══════════════════════════════════════════════════════════════
+let CLIENTES = [];
+let estado = {};
+let nextExtId = 1000;
+let pendingArqId = null;
+let pendingDelId = null;
+let sistemaCarregado = false;
+
+// ══════════════════════════════════════════════════════════════
+// LOGIN
+// ══════════════════════════════════════════════════════════════
+function tentarLogin() {
+  const senha = document.getElementById('senha-input').value;
+  if (senha === SENHA_ACESSO) {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app-header').style.display = 'block';
+    document.getElementById('app-stats').style.display = 'block';
+    document.getElementById('app-main').style.display = 'block';
+    inicializar();
+  } else {
+    const inp = document.getElementById('senha-input');
+    inp.classList.remove('shake'); void inp.offsetWidth; inp.classList.add('shake');
+    document.getElementById('login-error').textContent = 'Senha incorreta. Tente novamente.';
+    inp.value = '';
+  }
+}
+document.getElementById('senha-input').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') tentarLogin();
+});
+
+// ══════════════════════════════════════════════════════════════
+// INICIALIZAR
+// ══════════════════════════════════════════════════════════════
+async function inicializar() {
+  CLIENTES = [...CLIENTES_BASE];
+  CLIENTES_BASE.forEach(function(c) {
+    estado[c.id] = { status: 'pendente', date: '', time: '', obs: '', arquivado: false };
+  });
+
+  try {
+    const { data, error } = await db.from('clientes').select('*');
+    if (error) throw error;
+
+    if (data && data.length > 0) {
+      data.forEach(function(row) {
+        const sid = String(row.id);
+        if (estado[sid] !== undefined) {
+          estado[sid] = {
+            status:    row.status    || 'pendente',
+            date:      row.date      || '',
+            time:      row.time      || '',
+            obs:       row.obs       || '',
+            arquivado: row.arquivado || false
+          };
+        } else {
+          const clienteExtra = {
+            id:       sid,
+            proto:    row.proto    || '—',
+            circuito: row.circuito || '—',
+            segmento: row.segmento || '—',
+            name:     row.nome     || sid,
+            addr:     row.addr     || '—',
+            bairro:   row.bairro   || '—',
+            local:    row.local    || '—',
+            phone:    row.phone    || '—'
+          };
+          CLIENTES.push(clienteExtra);
+          estado[sid] = {
+            status:    row.status    || 'pendente',
+            date:      row.date      || '',
+            time:      row.time      || '',
+            obs:       row.obs       || '',
+            arquivado: row.arquivado || false
+          };
+          const numId = parseInt(sid.replace('ext_', '')) || 0;
+          if (numId >= nextExtId) nextExtId = numId + 1;
+        }
+      });
+    }
+  } catch (err) {
+    console.error('Erro ao carregar Supabase:', err);
+    mostrarToast('⚠️ Erro ao carregar dados: ' + err.message, true);
+  }
+
+  popularLocais();
+  document.getElementById('loading-cards').style.display = 'none';
+  document.getElementById('cards').style.display = 'grid';
+  sistemaCarregado = true;
+  render();
+}
+
+// ══════════════════════════════════════════════════════════════
+// SALVAR
+// ══════════════════════════════════════════════════════════════
+async function salvarEstado(id) {
+  if (!sistemaCarregado) return;
+  const e = estado[id];
+  const row = {
+    id: String(id), status: e.status,
+    date: e.date || null, time: e.time || null,
+    obs: e.obs || null, arquivado: e.arquivado,
+    updated_at: new Date().toISOString()
+  };
+  try {
+    const { error } = await db.from('clientes').upsert(row, { onConflict: 'id' });
+    if (error) throw error;
+    mostrarToast('💾 Salvo!');
+  } catch (err) {
+    mostrarToast('⚠️ Erro ao salvar: ' + err.message, true);
+  }
+}
+
+async function salvarNovoClienteSupabase(cliente) {
+  const row = {
+    id: String(cliente.id), status: 'pendente',
+    date: null, time: null, obs: null, arquivado: false,
+    updated_at: new Date().toISOString(),
+    nome: cliente.name, proto: cliente.proto, circuito: cliente.circuito,
+    segmento: cliente.segmento, phone: cliente.phone,
+    addr: cliente.addr, bairro: cliente.bairro, local: cliente.local
+  };
+  try {
+    const { error } = await db.from('clientes').upsert(row, { onConflict: 'id' });
+    if (error) throw error;
+  } catch (err) {
+    mostrarToast('⚠️ Erro ao salvar cliente: ' + err.message, true);
+  }
+}
+
+async function salvarTodos() {
+  if (!sistemaCarregado) return;
+  const rows = Object.keys(estado).map(function(id) {
+    const e = estado[id];
+    return { id: String(id), status: e.status, date: e.date || null, time: e.time || null, obs: e.obs || null, arquivado: e.arquivado, updated_at: new Date().toISOString() };
+  });
+  try {
+    const { error } = await db.from('clientes').upsert(rows, { onConflict: 'id' });
+    if (error) throw error;
+  } catch (err) {
+    mostrarToast('⚠️ Erro no autosave!', true);
+  }
+}
+setInterval(salvarTodos, 60000);
+
+let saveTimers = {};
+function setState(id, key, val) {
+  estado[id][key] = val;
+  updateStats();
+  clearTimeout(saveTimers[id]);
+  saveTimers[id] = setTimeout(function() { salvarEstado(id); }, 600);
+}
+
+// ══════════════════════════════════════════════════════════════
+// EXCLUIR PERMANENTEMENTE
+// ══════════════════════════════════════════════════════════════
+function pedirExcluir(id) {
+  pendingDelId = id;
+  const c = CLIENTES.find(function(x){ return String(x.id) === String(id); });
+  document.getElementById('modal-del-nome').textContent = c ? c.name : '';
+  abrirModal('modal-del');
+}
+
+async function confirmarExcluir() {
+  if (!pendingDelId) return;
+  const id = pendingDelId;
+  fecharModal('modal-del');
+
+  // Remove do Supabase
+  try {
+    const { error } = await db.from('clientes').delete().eq('id', String(id));
+    if (error) throw error;
+  } catch (err) {
+    mostrarToast('⚠️ Erro ao excluir: ' + err.message, true);
+    pendingDelId = null;
+    return;
+  }
+
+  // Remove da memória
+  CLIENTES = CLIENTES.filter(function(c){ return String(c.id) !== String(id); });
+  delete estado[id];
+
+  popularLocais();
+  render();
+  renderArquivados();
+  updateStats();
+  mostrarToast('🗑️ Cliente excluído permanentemente.');
+  pendingDelId = null;
+}
+
+// ══════════════════════════════════════════════════════════════
+// FILTROS
+// ══════════════════════════════════════════════════════════════
+function popularLocais() {
+  const sel = document.getElementById('filterLocal');
+  while (sel.options.length > 1) sel.remove(1);
+  const ativos = CLIENTES.filter(function(c){ return !estado[c.id] || !estado[c.id].arquivado; });
+  const locs = [...new Set(ativos.map(function(c){ return c.local; }))].sort();
+  locs.forEach(function(l) {
+    const o = document.createElement('option'); o.value = l; o.textContent = l; sel.appendChild(o);
+  });
+}
+
+function getFiltered() {
+  const q  = document.getElementById('search').value.toLowerCase();
+  const fs = document.getElementById('filterStatus').value;
+  const fl = document.getElementById('filterLocal').value;
+  return CLIENTES.filter(function(c) {
+    const e = estado[c.id];
+    if (!e || e.arquivado) return false;
+    const matchQ = !q ||
+      c.name.toLowerCase().includes(q) ||
+      c.phone.includes(q) ||
+      c.addr.toLowerCase().includes(q) ||
+      c.bairro.toLowerCase().includes(q) ||
+      c.proto.includes(q) ||
+      (c.circuito && c.circuito.includes(q)) ||
+      c.local.toLowerCase().includes(q);
+    const matchS = !fs || e.status === fs;
+    const matchL = !fl || c.local === fl;
+    return matchQ && matchS && matchL;
+  });
+}
+
+function updateStats() {
+  const ativos = CLIENTES.filter(function(c){ return estado[c.id] && !estado[c.id].arquivado; });
+  const arq    = CLIENTES.filter(function(c){ return estado[c.id] && estado[c.id].arquivado; });
+  const pend   = ativos.filter(function(c){ return estado[c.id].status === 'pendente'; }).length;
+  const env    = ativos.filter(function(c){ return estado[c.id].status === 'enviado'; }).length;
+  const ag     = ativos.filter(function(c){ return estado[c.id].status === 'agendado'; }).length;
+  document.getElementById('stats').innerHTML =
+    '<div class="stat s-total"><div class="stat-dot"></div><span>Ativos:</span><span class="stat-n">'+ativos.length+'</span></div>' +
+    '<div class="stat s-pend"><div class="stat-dot"></div><span>Pendentes:</span><span class="stat-n">'+pend+'</span></div>' +
+    '<div class="stat s-env"><div class="stat-dot"></div><span>Contato feito:</span><span class="stat-n">'+env+'</span></div>' +
+    '<div class="stat s-ag"><div class="stat-dot"></div><span>Agendados:</span><span class="stat-n">'+ag+'</span></div>' +
+    '<div class="stat s-arq"><div class="stat-dot"></div><span>Arquivados:</span><span class="stat-n">'+arq.length+'</span></div>';
+}
+
+// ══════════════════════════════════════════════════════════════
+// RENDER CARDS
+// ══════════════════════════════════════════════════════════════
+function render() {
+  updateStats();
+  const filtered = getFiltered();
+  const cards = document.getElementById('cards');
+  const empty = document.getElementById('empty-msg');
+  if (!filtered.length) { cards.innerHTML = ''; empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+
+  const segBadge = { 'EMPRESARIAL': '🏢', 'RESIDENCIAL': '🏠' };
+
+  cards.innerHTML = filtered.map(function(c) {
+    const e  = estado[c.id];
+    const st = e.status;
+    const badge = st==='pendente'
+      ? '<span class="badge badge-pend">PENDENTE</span>'
+      : st==='enviado'
+        ? '<span class="badge badge-env">CONTATO FEITO</span>'
+        : '<span class="badge badge-ag">✓ AGENDADO</span>';
+    const btnContato = st==='pendente'
+      ? '<button class="btn-contato pending" onclick="marcarContato(\''+c.id+'\')">📱 Marcar contato feito</button>'
+      : '<button class="btn-contato done"    onclick="marcarContato(\''+c.id+'\')">✓ Contato feito</button>';
+    const btnAg = (st==='enviado'||st==='agendado')
+      ? '<button class="btn-agendar '+(st==='agendado'?'done':'')+'" onclick="marcarAgendado(\''+c.id+'\')">'+(st==='agendado'?'✓ Agendado':'Confirmar agendamento')+'</button>'
+      : '';
+    const seg = c.segmento ? (segBadge[c.segmento]||'') + ' ' + c.segmento : '';
+
+    return '<div class="card status-'+st+'" id="card-'+c.id+'">' +
+      '<div class="card-top"><div><div class="card-name">'+c.name+'</div></div>'+badge+'</div>' +
+      '<div class="card-meta">' +
+        '<span class="card-meta-item"><strong>Proto:</strong> '+c.proto+'</span>' +
+        '<span class="card-meta-item"><strong>Circuito:</strong> '+(c.circuito||'—')+'</span>' +
+        (seg ? '<span class="card-meta-item">'+seg+'</span>' : '') +
+      '</div>' +
+      '<div class="phone-box"><div class="phone-num">'+c.phone+'</div><button class="btn-copy" id="copy-'+c.id+'" onclick="copiarTel(\''+c.phone+'\',\''+c.id+'\')">Copiar</button></div>' +
+      '<div class="card-addr"><strong>'+c.bairro+'</strong> — '+c.addr+'<br><span style="color:#aaa;font-size:11px">'+c.local+'</span></div>' +
+      '<div class="card-fields">' +
+        '<div class="field"><label>Data da retirada</label><input type="date" value="'+(e.date||'')+'" onchange="setState(\''+c.id+'\',\'date\',this.value)"></div>' +
+        '<div class="field"><label>Horário</label><input type="time" value="'+(e.time||'')+'" onchange="setState(\''+c.id+'\',\'time\',this.value)"></div>' +
+        '<div class="field field-obs"><label>Observação</label><textarea placeholder="Ex: cliente solicitou manhã, portão verde..." onchange="setState(\''+c.id+'\',\'obs\',this.value)">'+(e.obs||'')+'</textarea></div>' +
+      '</div>' +
+      '<div class="card-actions">'+btnContato+btnAg+
+        '<button class="btn-arquivar" onclick="pedirArquivar(\''+c.id+'\')">📦</button>' +
+        '<button class="btn-excluir" onclick="pedirExcluir(\''+c.id+'\')" title="Excluir permanentemente">🗑️</button>' +
+        (st!=='pendente'?'<button class="btn-reset" title="Resetar status" onclick="resetar(\''+c.id+'\')">↺</button>':'')+
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
+// ══════════════════════════════════════════════════════════════
+// AÇÕES DE STATUS
+// ══════════════════════════════════════════════════════════════
+function marcarContato(id) {
+  estado[id].status = estado[id].status === 'enviado' ? 'pendente' : 'enviado';
+  render(); salvarEstado(id);
+}
+function marcarAgendado(id) {
+  estado[id].status = estado[id].status === 'agendado' ? 'enviado' : 'agendado';
+  render(); salvarEstado(id);
+}
+function resetar(id) {
+  estado[id].status = 'pendente';
+  render(); salvarEstado(id);
+}
+
+// ══════════════════════════════════════════════════════════════
+// ARQUIVAR / DESARQUIVAR
+// ══════════════════════════════════════════════════════════════
+function pedirArquivar(id) {
+  pendingArqId = id;
+  const c = CLIENTES.find(function(x){ return String(x.id) === String(id); });
+  document.getElementById('modal-arq-nome').textContent = c ? c.name : '';
+  abrirModal('modal-arq');
+}
+function confirmarArquivar() {
+  if (!pendingArqId) return;
+  estado[pendingArqId].arquivado = true;
+  fecharModal('modal-arq');
+  popularLocais(); render();
+  if (document.getElementById('view-arquivados').style.display !== 'none') renderArquivados();
+  salvarEstado(pendingArqId);
+  mostrarToast('📦 Cliente arquivado!');
+  pendingArqId = null;
+}
+function desarquivar(id) {
+  estado[id].arquivado = false;
+  estado[id].status = 'pendente';
+  popularLocais(); renderArquivados();
+  if (document.getElementById('view-operador').style.display !== 'none') render();
+  updateStats(); salvarEstado(id);
+  mostrarToast('✅ Cliente restaurado!');
+}
+
+// ══════════════════════════════════════════════════════════════
+// ADICIONAR NOVO CLIENTE
+// ══════════════════════════════════════════════════════════════
+function confirmarNovoCliente() {
+  const name  = document.getElementById('f-name').value.trim().toUpperCase();
+  const phone = document.getElementById('f-phone').value.trim();
+  if (!name || !phone) { mostrarToast('⚠️ Nome e Telefone são obrigatórios!', true); return; }
+
+  const novoId = 'ext_' + nextExtId++;
+  const cliente = {
+    id:       novoId,
+    proto:    document.getElementById('f-proto').value.trim()    || '—',
+    circuito: document.getElementById('f-circuito').value.trim() || '—',
+    segmento: document.getElementById('f-segmento').value.trim().toUpperCase() || '—',
+    name:     name,
+    addr:     document.getElementById('f-addr').value.trim().toUpperCase()   || '—',
+    bairro:   document.getElementById('f-bairro').value.trim().toUpperCase() || '—',
+    local:    document.getElementById('f-local').value.trim().toUpperCase()  || '—',
+    phone:    phone
+  };
+
+  CLIENTES.push(cliente);
+  estado[novoId] = { status: 'pendente', date: '', time: '', obs: '', arquivado: false };
+  popularLocais();
+  fecharModal('modal-add');
+  ['f-name','f-proto','f-circuito','f-segmento','f-phone','f-addr','f-bairro','f-local'].forEach(function(id){
+    document.getElementById(id).value = '';
+  });
+  render();
+  mostrarToast('✅ Cliente adicionado!');
+  salvarNovoClienteSupabase(cliente);
+}
+
+// ══════════════════════════════════════════════════════════════
+// RENDER TÉCNICOS
+// ══════════════════════════════════════════════════════════════
+function renderTecnico() {
+  const agendados = CLIENTES.filter(function(c){
+    return estado[c.id] && estado[c.id].status === 'agendado' && !estado[c.id].arquivado;
+  });
+  agendados.sort(function(a,b){
+    const da = estado[a.id].date||'9999', db2 = estado[b.id].date||'9999';
+    if (da !== db2) return da > db2 ? 1 : -1;
+    const ta = estado[a.id].time||'99:99', tb = estado[b.id].time||'99:99';
+    return ta > tb ? 1 : -1;
+  });
+  const tbody = document.getElementById('tec-tbody');
+  const empty = document.getElementById('tec-empty');
+  document.getElementById('tec-count').textContent = agendados.length + ' cliente(s)';
+  if (!agendados.length) { tbody.innerHTML = ''; empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+  tbody.innerHTML = agendados.map(function(c, i) {
+    const e = estado[c.id];
+    const dataFmt = e.date
+      ? new Date(e.date+'T12:00:00').toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'2-digit'})
+      : '—';
+    return '<tr>' +
+      '<td style="color:#aaa;font-size:12px">'+(i+1)+'</td>' +
+      '<td><div class="tec-name">'+c.name+'</div><div class="tec-addr">'+c.bairro+' — '+c.local+'</div></td>' +
+      '<td><div class="tec-addr">'+c.addr+'</div></td>' +
+      '<td style="font-family:monospace;font-size:13px">'+c.phone+'</td>' +
+      '<td style="font-family:monospace;font-size:12px;color:#666">'+(c.circuito||'—')+'</td>' +
+      '<td><div class="tec-date">'+dataFmt+'</div></td>' +
+      '<td><div class="tec-time">'+(e.time||'—')+'</div></td>' +
+      '<td><div class="tec-obs">'+(e.obs||'—')+'</div></td>' +
+    '</tr>';
+  }).join('');
+}
+
+// ══════════════════════════════════════════════════════════════
+// RENDER ARQUIVADOS — com busca
+// ══════════════════════════════════════════════════════════════
+function renderArquivados() {
+  const q = (document.getElementById('search-arq').value || '').toLowerCase();
+  const arq = CLIENTES.filter(function(c){
+    if (!estado[c.id] || !estado[c.id].arquivado) return false;
+    if (!q) return true;
+    return c.name.toLowerCase().includes(q) ||
+           c.phone.includes(q) ||
+           (c.circuito && c.circuito.includes(q)) ||
+           c.proto.includes(q) ||
+           c.local.toLowerCase().includes(q) ||
+           c.addr.toLowerCase().includes(q);
+  });
+
+  const tbody = document.getElementById('arq-tbody');
+  const empty = document.getElementById('arq-empty');
+  const total = CLIENTES.filter(function(c){ return estado[c.id] && estado[c.id].arquivado; }).length;
+  document.getElementById('arq-count').textContent = (q ? arq.length + ' de ' + total : total) + ' cliente(s)';
+
+  if (!arq.length) { tbody.innerHTML = ''; empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+  tbody.innerHTML = arq.map(function(c, i) {
+    const e = estado[c.id];
+    const dataFmt = e.date
+      ? new Date(e.date+'T12:00:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric'})
+      : '—';
+    return '<tr>' +
+      '<td style="color:#aaa;font-size:12px">'+(i+1)+'</td>' +
+      '<td><div class="arq-name">'+c.name+'</div><div class="arq-sub">Proto: '+c.proto+' · '+c.local+'</div></td>' +
+      '<td style="font-family:monospace;font-size:13px">'+c.phone+'</td>' +
+      '<td style="font-family:monospace;font-size:12px;color:#666">'+(c.circuito||'—')+'</td>' +
+      '<td><div class="arq-sub">'+c.bairro+', '+c.addr+'</div></td>' +
+      '<td><div class="arq-date">'+dataFmt+(e.time?' às '+e.time:'')+'</div></td>' +
+      '<td><div class="arq-sub" style="font-style:italic">'+(e.obs||'—')+'</div></td>' +
+      '<td><div class="arq-actions">' +
+        '<button class="btn-desarquivar" onclick="desarquivar(\''+c.id+'\')">↩ Restaurar</button>' +
+        '<button class="btn-del-arq" onclick="pedirExcluir(\''+c.id+'\')" title="Excluir permanentemente">🗑️</button>' +
+      '</div></td>' +
+    '</tr>';
+  }).join('');
+}
+
+// ══════════════════════════════════════════════════════════════
+// UTILITÁRIOS
+// ══════════════════════════════════════════════════════════════
+function copiarTel(phone, id) {
+  navigator.clipboard.writeText(phone).then(function(){
+    const btn = document.getElementById('copy-'+id);
+    if (btn) { btn.textContent = 'Copiado!'; btn.classList.add('copied'); setTimeout(function(){ btn.textContent = 'Copiar'; btn.classList.remove('copied'); }, 1500); }
+  }).catch(function(){
+    const t = document.createElement('textarea'); t.value = phone; document.body.appendChild(t); t.select(); document.execCommand('copy'); document.body.removeChild(t);
+  });
+}
+
+function setView(v) {
+  ['operador','tecnico','arquivados'].forEach(function(name){
+    document.getElementById('view-'+name).style.display = v===name ? 'block' : 'none';
+  });
+  document.getElementById('toolbar-op').style.display = v==='operador' ? 'flex' : 'none';
+  document.querySelectorAll('.tab').forEach(function(t, i){
+    t.classList.toggle('active', (i===0&&v==='operador')||(i===1&&v==='tecnico')||(i===2&&v==='arquivados'));
+  });
+  if (v==='tecnico')    renderTecnico();
+  if (v==='arquivados') renderArquivados();
+}
+
+function abrirModal(id)  { document.getElementById(id).classList.add('open'); }
+function fecharModal(id) { document.getElementById(id).classList.remove('open'); }
+document.getElementById('modal-add').addEventListener('click', function(e){ if(e.target===this) fecharModal('modal-add'); });
+document.getElementById('modal-arq').addEventListener('click', function(e){ if(e.target===this) fecharModal('modal-arq'); });
+document.getElementById('modal-del').addEventListener('click', function(e){ if(e.target===this) fecharModal('modal-del'); });
+
+let toastTimer;
+function mostrarToast(msg, erro) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.toggle('erro', !!erro); t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function(){ t.classList.remove('show'); }, 2500);
+}
+</script>
+</body>
+</html>
